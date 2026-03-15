@@ -22,7 +22,10 @@ def get_data():
     session = requests.Session()
     session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     
-    data = yf.download("SI=F", start=start_date, end=end_date, session=session)
+    try:
+        data = yf.download("SI=F", start=start_date, end=end_date, session=session)
+    except Exception as e:
+        return pd.DataFrame()
     
     if isinstance(data.columns, pd.MultiIndex):
         df = data['Close'].copy()
