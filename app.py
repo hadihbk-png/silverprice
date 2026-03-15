@@ -17,7 +17,12 @@ st.title("Silver Price Analysis and Forecast (SI=F)")
 def get_data():
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=5*365 + 10) # 5 years
-    data = yf.download("SI=F", start=start_date, end=end_date)
+    
+    import requests
+    session = requests.Session()
+    session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    
+    data = yf.download("SI=F", start=start_date, end=end_date, session=session)
     
     if isinstance(data.columns, pd.MultiIndex):
         df = data['Close'].copy()
