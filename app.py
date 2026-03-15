@@ -1,5 +1,4 @@
 import streamlit as st
-import yfinance as yf
 import pandas as pd
 import numpy as np
 import datetime
@@ -8,6 +7,8 @@ from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_squared_error
 import plotly.graph_objects as go
 import warnings
+from yahooquery import Ticker
+
 warnings.filterwarnings("ignore")
 
 st.set_page_config(page_title="Silver Price Predictor", layout="wide")
@@ -15,29 +16,29 @@ st.title("Silver Price Analysis and Forecast (SI=F)")
 
 @st.cache_data
 def get_data():
-    end_date = datetime.date.today()
-    start_date = end_date - datetime.timedelta(days=5*365 + 10) # 5 years
-    
-    import requests
-    session = requests.Session()
-    session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    
     try:
-        data = yf.download("SI=F", start=start_date, end=end_date, session=session)
+        t = Ticker("SI=F")
+        df = t.history(period="5y")
+        
+        if isinstance(df, pd.DataFrame) and not df.empty:
+            # Ticker.history returns multi-index (symbol, date)
+            if 'symbol' in df.index.names:
+                df = df.reset_index(level='symbol', drop=True)
+            
+            # The dates might be in 'date' column or index, resetting index will just make date the index
+            if 'close' in df.columns:
+                df = df[['close']].rename(columns={'close': 'Close'})
+                df.dropna(inplace=True)
+                # ensure the index is datetime
+                df.index = pd.to_datetime(df.index)
+                if df.empty:
+                    raise Exception("Empty after processing.")
+                # We need to filter exactly 5 years as yahooquery '5y' may give slightly different ranges, but it doesn't matter much.
+                return df
+            
+        raise Exception("Invalid data format returned.")
     except Exception as e:
         return pd.DataFrame()
-    
-    if isinstance(data.columns, pd.MultiIndex):
-        df = data['Close'].copy()
-        if isinstance(df, pd.Series):
-            df = df.to_frame(name='Close')
-        else:
-            df.columns = ['Close']
-    else:
-        df = data[['Close']].copy()
-    
-    df.dropna(inplace=True)
-    return df
 
 df = get_data()
 

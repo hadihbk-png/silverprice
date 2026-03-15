@@ -1,8 +1,8 @@
 streamlit
-yfinance
 pandas
 numpy
 statsmodels
 scikit-learn
 plotly
 requests
+yahooquery
