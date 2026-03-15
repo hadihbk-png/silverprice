@@ -33,6 +33,10 @@ def get_data():
 
 df = get_data()
 
+if df.empty:
+    st.error("Failed to fetch data from Yahoo Finance. This sometimes happens on cloud servers due to rate limits. Please try again later.")
+    st.stop()
+
 st.subheader("Historical Data (Last 5 Years)")
 fig_hist = go.Figure()
 fig_hist.add_trace(go.Scatter(x=df.index, y=df['Close'].values.flatten(), mode='lines', name='Close Price', line=dict(color='#00b4d8')))
